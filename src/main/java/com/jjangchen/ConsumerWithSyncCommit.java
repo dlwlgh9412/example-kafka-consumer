@@ -12,27 +12,30 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class Consumer {
-    private final static Logger logger = LoggerFactory.getLogger(Consumer.class);
+public class ConsumerWithSyncCommit {
+    private final static Logger logger = LoggerFactory.getLogger(ConsumerWithSyncCommit.class);
     private final static String TOPIC_NAME = "test";
-    private final static String BOOTSTRAP_SERVERS = "localhost:9092";
-    private final static String GROUP_ID = "test-group";
+    private final static String BOOTSTRAP_SERVER = "localhost:9092";
+    // subscribe메서드로 토픽을 구독할 시에는 필수 값
+    private final static String GROUP_ID = "test_group";
 
     public static void main(String[] args) {
         Properties configs = new Properties();
-        configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+        configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         configs.put(ConsumerConfig.GROUP_ID_CONFIG, GROUP_ID);
         configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        configs.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(configs);
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(configs);
         consumer.subscribe(Arrays.asList(TOPIC_NAME));
 
         while(true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
             for(ConsumerRecord<String, String> record : records) {
-                logger.info("{}", record);
+                logger.info("record: {}", record);
             }
+            consumer.commitSync();
         }
     }
 }
